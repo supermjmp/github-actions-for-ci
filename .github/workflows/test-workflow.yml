@@ -18,7 +18,7 @@ jobs:
 
       - name: 'Run terraform plan'
         id: plan
-        run: out="$(cat plan.txt | perl -0777 -pe 's/(("${{ env.terraform_sensitive_values }})"\n\s*value\s*=\s*")(.*)"/$1******"/g')"
+        run: out="$(cat plan.txt)"
           echo "::set-output name=plan::$out"
 
       - name: 'Add comment on PR'
