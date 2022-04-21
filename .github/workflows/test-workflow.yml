@@ -20,7 +20,7 @@ jobs:
         id: plan
         run: |
           echo "PLAN<<EOF" >> $GITHUB_ENV
-          cat plan.txt | perl -0777 -pe 's/(("${{ env.terraform_sensitive_values }})"\n\s*value\s*=\s*")(.*)"/$1******"/g' >> $GITHUB_ENV
+          cat plan.txt | perl -0777 -pe 's/(("${{ env.terraform_sensitive_values }})"\n\s*"value"\s*=\s*")(.*)"/$1******"/g' >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: 'Add comment on PR'
