@@ -19,13 +19,11 @@ jobs:
       - name: 'Run terraform plan'
         id: plan
         run: |
-          echo "::set-output name=guizz::$(cat plan.txt)"
+          echo "::set-env name=PLAN::$(cat plan.txt | perl -0777 -pe 's/(("${{ env.terraform_sensitive_values }})"\n\s*value\s*=\s*")(.*)"/$1******"/g')"
 
       - name: 'Add comment on PR'
         uses: actions/github-script@v4.0.2
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "${{ steps.plan.outputs.guizz }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -34,7 +32,7 @@ jobs:
 
             <details>
               <summary>Show Plan</summary>
-              <pre>${process.env.PLAN}</pre>
+              <pre>${{ env.PLAN }}</pre>
             </details>
 
             *Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*
