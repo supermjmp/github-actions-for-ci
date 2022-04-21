@@ -1,7 +1,7 @@
 name: 'Terraform CI checks - STAGE'
 
 on:
-  push:
+  pull-request:
 
 env:
   terraform_version: '0.13.7'
