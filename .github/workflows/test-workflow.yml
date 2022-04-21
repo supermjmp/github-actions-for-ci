@@ -1,0 +1,52 @@
+name: 'Terraform CI checks - STAGE'
+
+on:
+  push:
+
+env:
+  terraform_version: '0.13.7'
+  terragrunt_version: '0.28.24'
+  terraform_sensitive_values: 'DB_.*|.*_SECRET|SM_API_CLIENT_ID'
+
+jobs:
+  run-terraform-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+
+      - name: 'Run terraform plan'
+        id: plan
+        run: out="$(cat plan.txt | perl -0777 -pe 's/(("${{ env.terraform_sensitive_values }})"\n\s*value\s*=\s*")(.*)"/$1******"/g')"
+          echo "::set-output name=plan::$out"
+
+      - name: 'Add comment on PR'
+        uses: actions/github-script@v4.0.2
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "${{ steps.plan.outputs.plan }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `
+            #### Terraform Format and Style 🖌  \`${{ steps.fmt.outcome }}\`
+            #### Terraform Validation 🤖  \`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖  \`${{ steps.plan.outcome }}\`
+
+            <details>
+              <summary>Show Plan</summary>
+              <pre>${process.env.PLAN}</pre>
+            </details>
+
+            *Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*
+
+            `;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
